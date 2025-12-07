@@ -47,26 +47,35 @@ export const CameraFeed: React.FC<CameraFeedProps> = ({ webcamRef, driverState, 
                 <Camera className="w-3 h-3 text-gray-400" />
             </div>
 
-            {/* Debug Overlay */}
-            <div className="absolute bottom-4 left-4 bg-black/70 backdrop-blur-md p-3 rounded-lg border border-white/10 z-10 text-xs font-mono">
-                <div className="flex flex-col gap-1">
-                    <div className="flex justify-between gap-4">
-                        <span className="text-gray-400">FPS:</span>
-                        <span className="text-green-400">{driverState.fps}</span>
-                    </div>
-                    <div className="flex justify-between gap-4">
-                        <span className="text-gray-400">EAR:</span>
-                        <span className={driverState.ear < 0.25 ? "text-red-400" : "text-blue-400"}>
-                            {driverState.ear.toFixed(3)}
-                        </span>
-                    </div>
-                    <div className="flex justify-between gap-4">
-                        <span className="text-gray-400">Velocity:</span>
-                        <span className={driverState.headVelocity > 0.5 ? "text-yellow-400" : "text-blue-400"}>
-                            {driverState.headVelocity.toFixed(2)}
-                        </span>
+            {/* Live Metrics Panel */}
+            <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end z-10">
+                <div className="bg-black/70 backdrop-blur-md p-3 rounded-lg border border-white/10 text-xs font-mono">
+                    <div className="flex flex-col gap-1">
+                        <div className="flex justify-between gap-4">
+                            <span className="text-gray-400">FPS:</span>
+                            <span className="text-green-400">{driverState.fps}</span>
+                        </div>
+                        <div className="flex justify-between gap-4">
+                            <span className="text-gray-400">EYE OPENNESS:</span>
+                            <span className={driverState.ear < 0.25 ? "text-red-400 font-bold" : "text-blue-400"}>
+                                {driverState.ear.toFixed(3)}
+                            </span>
+                        </div>
+                        <div className="flex justify-between gap-4">
+                            <span className="text-gray-400">HEAD VELOCITY:</span>
+                            <span className={driverState.headVelocity > 0.5 ? "text-yellow-400 font-bold" : "text-blue-400"}>
+                                {driverState.headVelocity.toFixed(2)}
+                            </span>
+                        </div>
                     </div>
                 </div>
+
+                {/* No Face Detected Warning */}
+                {isInitialized && driverState.ear === 0 && (
+                    <div className="bg-red-500/20 backdrop-blur-md px-4 py-2 rounded-lg border border-red-500/50 animate-pulse">
+                        <span className="text-red-400 font-bold tracking-wider text-sm">NO FACE DETECTED</span>
+                    </div>
+                )}
             </div>
         </div>
     );
