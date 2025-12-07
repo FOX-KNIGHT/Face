@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { FaceMesh } from '@mediapipe/face_mesh';
+import { FaceMesh, FACEMESH_TESSELATION, FACEMESH_RIGHT_EYE, FACEMESH_LEFT_EYE, FACEMESH_FACE_OVAL } from '@mediapipe/face_mesh';
 import type { Results } from '@mediapipe/face_mesh';
+import { drawConnectors } from '@mediapipe/drawing_utils';
 import { Camera } from '@mediapipe/camera_utils';
 import { playAlertSound } from '../utils/audio';
 import Webcam from 'react-webcam';
@@ -24,9 +25,10 @@ export interface LogEntry {
 // Constants
 const EAR_THRESHOLD = 0.25;
 const CONSECUTIVE_FRAMES = 15;
-const RAGE_VELOCITY_THRESHOLD = 0.5; // Threshold for head movement velocity
+const RAGE_VELOCITY_THRESHOLD = 2.0; // Increased from 0.5 to 2.0 for lower sensitivity
+const RAGE_CONSECUTIVE_FRAMES = 3; // Debounce for rage detection
 
-export const useDriverAI = (videoRef: React.RefObject<Webcam | null>) => {
+export const useDriverAI = (videoRef: React.RefObject<Webcam | null>, canvasRef: React.RefObject<HTMLCanvasElement | null>) => {
     const [driverState, setDriverState] = useState<DriverState>({
         isDrowsy: false,
         isRage: false,
@@ -56,6 +58,7 @@ export const useDriverAI = (videoRef: React.RefObject<Webcam | null>) => {
 
     // Refs for logic to avoid re-renders
     const frameCounter = useRef(0);
+    const rageFrameCounter = useRef(0);
     const lastProcessTime = useRef(Date.now());
     const lastNosePos = useRef<{ x: number, y: number } | null>(null);
     const distractionStartTime = useRef<number | null>(null);
@@ -157,12 +160,55 @@ export const useDriverAI = (videoRef: React.RefObject<Webcam | null>) => {
 
     const onResults = useCallback((results: Results) => {
         if (!isMonitoring) return;
-        if (!results.multiFaceLandmarks || results.multiFaceLandmarks.length === 0) return;
+
+        // Draw Face Mesh
+        if (canvasRef.current && videoRef.current?.video) {
+            const videoWidth = videoRef.current.video.videoWidth;
+            const videoHeight = videoRef.current.video.videoHeight;
+            canvasRef.current.width = videoWidth;
+            canvasRef.current.height = videoHeight;
+
+            const canvasCtx = canvasRef.current.getContext('2d');
+            if (canvasCtx) {
+                canvasCtx.save();
+                canvasCtx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+
+                if (results.multiFaceLandmarks) {
+                    for (const landmarks of results.multiFaceLandmarks) {
+                        drawConnectors(canvasCtx, landmarks, FACEMESH_TESSELATION,
+                            { color: '#C0C0C070', lineWidth: 1 });
+                        drawConnectors(canvasCtx, landmarks, FACEMESH_RIGHT_EYE,
+                            { color: '#FF3030', lineWidth: 2 });
+                        drawConnectors(canvasCtx, landmarks, FACEMESH_LEFT_EYE,
+                            { color: '#FF3030', lineWidth: 2 });
+                        drawConnectors(canvasCtx, landmarks, FACEMESH_FACE_OVAL,
+                            { color: '#E0E0E0', lineWidth: 1 });
+                    }
+                }
+                canvasCtx.restore();
+            }
+        }
 
         const now = Date.now();
         const deltaTime = now - lastProcessTime.current;
         const fps = 1000 / deltaTime;
         lastProcessTime.current = now;
+
+        // Handle No Face Detected
+        if (!results.multiFaceLandmarks || results.multiFaceLandmarks.length === 0) {
+            setDriverState(prev => ({
+                ...prev,
+                isDrowsy: false,
+                isRage: false,
+                ear: 0,
+                fps: Math.round(fps),
+                headVelocity: 0,
+                status: 'NO_FACE'
+            }));
+            frameCounter.current = 0;
+            rageFrameCounter.current = 0;
+            return;
+        }
 
         const landmarks = results.multiFaceLandmarks[0];
         const ear = calculateEAR(landmarks);
@@ -180,9 +226,14 @@ export const useDriverAI = (videoRef: React.RefObject<Webcam | null>) => {
 
         const isDrowsy = frameCounter.current >= CONSECUTIVE_FRAMES;
 
-        // Rage Logic: High velocity head movement
-        // In a real app, we'd combine this with emotion classification
-        const isRage = headVelocity > RAGE_VELOCITY_THRESHOLD;
+        // Rage Logic: High velocity head movement with debounce
+        if (headVelocity > RAGE_VELOCITY_THRESHOLD) {
+            rageFrameCounter.current++;
+        } else {
+            rageFrameCounter.current = 0;
+        }
+
+        const isRage = rageFrameCounter.current >= RAGE_CONSECUTIVE_FRAMES;
 
         let status: DriverState['status'] = 'NORMAL';
         if (isDrowsy) status = 'DROWSY';

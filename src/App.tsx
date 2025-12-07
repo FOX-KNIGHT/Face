@@ -11,6 +11,7 @@ import { useDriverAI } from './hooks/useDriverAI';
 
 function App() {
   const webcamRef = useRef<Webcam>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const {
     driverState,
     logs,
@@ -22,7 +23,7 @@ function App() {
     setDriverMode,
     sessionStartTime,
     alertCount
-  } = useDriverAI(webcamRef);
+  } = useDriverAI(webcamRef, canvasRef);
 
   return (
     <div style={{ minHeight: '100vh', paddingBottom: '3rem' }}>
@@ -40,6 +41,7 @@ function App() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             <CameraFeed
               webcamRef={webcamRef}
+              canvasRef={canvasRef}
               driverState={driverState}
               isInitialized={isInitialized}
             />

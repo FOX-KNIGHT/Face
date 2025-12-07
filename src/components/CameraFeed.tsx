@@ -1,16 +1,16 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import Webcam from 'react-webcam';
 import { Camera } from 'lucide-react';
 import type { DriverState } from '../hooks/useDriverAI';
 
 interface CameraFeedProps {
     webcamRef: React.RefObject<Webcam | null>;
+    canvasRef: React.RefObject<HTMLCanvasElement | null>;
     driverState: DriverState;
     isInitialized: boolean;
 }
 
-export const CameraFeed: React.FC<CameraFeedProps> = ({ webcamRef, driverState, isInitialized }) => {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
+export const CameraFeed: React.FC<CameraFeedProps> = ({ webcamRef, canvasRef, driverState, isInitialized }) => {
 
     return (
         <div className="relative rounded-2xl overflow-hidden bg-black aspect-video shadow-2xl border border-white/10">
