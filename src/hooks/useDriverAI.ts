@@ -100,7 +100,8 @@ export const useDriverAI = (videoRef: React.RefObject<Webcam | null>) => {
     }, []);
 
     // Placeholder for TF.js Emotion Detection
-    const predictEmotion = async (videoElement: HTMLVideoElement) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const predictEmotion = async (_videoElement: HTMLVideoElement) => {
         // TODO: Load TF.js model and predict emotion
         // const predictions = await model.predict(videoElement);
         // return predictions;
