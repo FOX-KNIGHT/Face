@@ -50,11 +50,21 @@ export const useDriverAI = (videoRef: React.RefObject<Webcam | null>) => {
 
     const [isMonitoring, setIsMonitoring] = useState(false);
 
+    const [driverMode, setDriverMode] = useState<'RIDESHARE' | 'EMERGENCY' | 'PRIVATE'>('PRIVATE');
+    const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
+    const [alertCount, setAlertCount] = useState(0);
+
     // Refs for logic to avoid re-renders
     const frameCounter = useRef(0);
     const lastProcessTime = useRef(Date.now());
     const lastNosePos = useRef<{ x: number, y: number } | null>(null);
     const distractionStartTime = useRef<number | null>(null);
+
+    // Auto-delete logs older than 3 days on mount
+    useEffect(() => {
+        const threeDaysAgo = Date.now() - (3 * 24 * 60 * 60 * 1000);
+        setLogs(prev => prev.filter(log => new Date(log.timestamp).getTime() > threeDaysAgo));
+    }, []);
 
     // Persist logs whenever they change
     useEffect(() => {
@@ -67,7 +77,17 @@ export const useDriverAI = (videoRef: React.RefObject<Webcam | null>) => {
     }, []);
 
     const toggleMonitoring = useCallback(() => {
-        setIsMonitoring(prev => !prev);
+        setIsMonitoring(prev => {
+            const newState = !prev;
+            if (newState) {
+                setSessionStartTime(Date.now());
+                setAlertCount(0);
+            } else {
+                setSessionStartTime(null);
+            }
+            return newState;
+        });
+
         // Reset state on toggle
         setDriverState(prev => ({
             ...prev,
@@ -78,6 +98,14 @@ export const useDriverAI = (videoRef: React.RefObject<Webcam | null>) => {
         frameCounter.current = 0;
         distractionStartTime.current = null;
     }, []);
+
+    // Placeholder for TF.js Emotion Detection
+    const predictEmotion = async (videoElement: HTMLVideoElement) => {
+        // TODO: Load TF.js model and predict emotion
+        // const predictions = await model.predict(videoElement);
+        // return predictions;
+        return { angry: 0.1, neutral: 0.9 }; // Stub
+    };
 
     // EAR Calculation
     // Indices for left eye: [362, 385, 387, 263, 373, 380] (MediaPipe 468 landmarks)
@@ -140,7 +168,10 @@ export const useDriverAI = (videoRef: React.RefObject<Webcam | null>) => {
         const headVelocity = calculateHeadVelocity(landmarks, deltaTime);
 
         // Drowsiness Logic
-        if (ear < EAR_THRESHOLD) {
+        // Adjust threshold based on mode (stricter for RIDESHARE/EMERGENCY)
+        const currentEarThreshold = driverMode === 'PRIVATE' ? EAR_THRESHOLD : EAR_THRESHOLD + 0.05;
+
+        if (ear < currentEarThreshold) {
             frameCounter.current++;
         } else {
             frameCounter.current = 0;
@@ -169,6 +200,7 @@ export const useDriverAI = (videoRef: React.RefObject<Webcam | null>) => {
         if (isDrowsy || isRage) {
             const type = isDrowsy ? 'DROWSINESS' : 'RAGE';
             playAlertSound(isDrowsy ? 'drowsiness' : 'rage');
+            setAlertCount(prev => prev + 1);
 
             setLogs(prev => {
                 // Debounce logs: don't log if same type occurred in last 3 seconds
@@ -185,7 +217,7 @@ export const useDriverAI = (videoRef: React.RefObject<Webcam | null>) => {
                 return [newLog, ...prev].slice(0, 50); // Keep last 50 logs
             });
         }
-    }, []);
+    }, [isMonitoring, driverMode]); // Added driverMode dependency
 
     useEffect(() => {
         const faceMesh = new FaceMesh({
@@ -208,6 +240,8 @@ export const useDriverAI = (videoRef: React.RefObject<Webcam | null>) => {
                 onFrame: async () => {
                     if (videoRef.current?.video) {
                         await faceMesh.send({ image: videoRef.current.video });
+                        // Placeholder for emotion detection
+                        // await predictEmotion(videoRef.current.video);
                     }
                 },
                 width: 640,
@@ -218,5 +252,16 @@ export const useDriverAI = (videoRef: React.RefObject<Webcam | null>) => {
         }
     }, [videoRef, onResults]);
 
-    return { driverState, logs, isInitialized, clearLogs, isMonitoring, toggleMonitoring };
+    return {
+        driverState,
+        logs,
+        isInitialized,
+        clearLogs,
+        isMonitoring,
+        toggleMonitoring,
+        driverMode,
+        setDriverMode,
+        sessionStartTime,
+        alertCount
+    };
 };
