@@ -8,29 +8,44 @@ interface ModeSelectorProps {
 
 export const ModeSelector: React.FC<ModeSelectorProps> = ({ currentMode, onModeChange }) => {
     const modes = [
-        { id: 'PRIVATE', label: 'PRIVATE', icon: User, color: 'var(--cyan)' },
-        { id: 'RIDESHARE', label: 'RIDESHARE', icon: Car, color: 'var(--yellow)' },
-        { id: 'EMERGENCY', label: 'EMERGENCY', icon: ShieldAlert, color: 'var(--red)' },
+        { id: 'PRIVATE', label: 'PRIVATE', icon: User, colorClass: 'cyan' },
+        { id: 'RIDESHARE', label: 'RIDESHARE', icon: Car, colorClass: 'yellow' },
+        { id: 'EMERGENCY', label: 'EMERGENCY', icon: ShieldAlert, colorClass: 'red' },
     ] as const;
 
     return (
-        <div className="flex items-center gap-3 bg-black/60 backdrop-blur-md p-2 rounded-xl border border-[var(--glass-border)] shadow-lg">
+        <div className="flex items-center gap-1 bg-black/80 backdrop-blur-xl p-1.5 rounded-full border border-white/10 shadow-2xl">
             {modes.map((mode) => {
                 const Icon = mode.icon;
                 const isActive = currentMode === mode.id;
+
+                let activeClasses = '';
+                let iconColor = '';
+
+                if (isActive) {
+                    if (mode.id === 'PRIVATE') {
+                        activeClasses = 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.3)]';
+                        iconColor = 'text-cyan-400';
+                    } else if (mode.id === 'RIDESHARE') {
+                        activeClasses = 'bg-yellow-500/20 border-yellow-500/50 text-yellow-400 shadow-[0_0_20px_rgba(234,179,8,0.3)]';
+                        iconColor = 'text-yellow-400';
+                    } else {
+                        activeClasses = 'bg-red-500/20 border-red-500/50 text-red-400 shadow-[0_0_20px_rgba(239,68,68,0.3)]';
+                        iconColor = 'text-red-400';
+                    }
+                } else {
+                    activeClasses = 'border-transparent text-gray-500 hover:text-gray-300 hover:bg-white/5';
+                    iconColor = 'text-gray-500 group-hover:text-gray-300';
+                }
 
                 return (
                     <button
                         key={mode.id}
                         onClick={() => onModeChange(mode.id)}
-                        className={`group flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-300 relative overflow-hidden ${isActive
-                            ? `bg-[${mode.color}]/10 border border-[${mode.color}] text-[${mode.color}] shadow-[0_0_15px_${mode.color}40]`
-                            : 'text-gray-400 hover:text-gray-200 hover:bg-white/5 border border-transparent'
-                            }`}
+                        className={`group flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300 ${activeClasses}`}
                     >
-                        <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300 bg-[${mode.color}]`} />
-                        <Icon className={`w-4 h-4 ${isActive ? 'animate-pulse' : ''}`} />
-                        <span className="text-xs font-bold tracking-widest">{mode.label}</span>
+                        <Icon className={`w-4 h-4 transition-colors duration-300 ${iconColor} ${isActive ? 'animate-pulse' : ''}`} />
+                        <span className="text-[10px] font-bold tracking-[0.2em]">{mode.label}</span>
                     </button>
                 );
             })}

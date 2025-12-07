@@ -31,8 +31,10 @@ function App() {
 
       <main className="container" style={{ paddingTop: '6rem' }}>
         {/* Control Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-6 p-4 glass-panel">
+        {/* Control Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-6 mb-8">
           <ModeSelector currentMode={driverMode} onModeChange={setDriverMode} />
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent mx-4" />
           <SessionInfo startTime={sessionStartTime} alertCount={alertCount} />
         </div>
 

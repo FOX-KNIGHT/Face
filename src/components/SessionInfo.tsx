@@ -33,17 +33,19 @@ export const SessionInfo: React.FC<SessionInfoProps> = ({ startTime, alertCount 
 
     return (
         <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-black/40 rounded-sm border border-[var(--glass-border)]">
-                <Clock className="w-3 h-3 text-[var(--cyan)]" />
-                <span className="font-mono text-xs text-[var(--cyan)] tracking-widest">{elapsed}</span>
+            {/* Timer */}
+            <div className="flex items-center gap-3 px-4 py-2 bg-black/80 backdrop-blur-xl rounded-full border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.1)]">
+                <Clock className="w-4 h-4 text-cyan-400 animate-pulse" />
+                <span className="font-mono text-sm text-cyan-50 tracking-[0.1em] font-bold">{elapsed}</span>
             </div>
 
-            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-sm border transition-all duration-300 ${alertCount > 0
-                    ? 'bg-[var(--red)]/10 border-[var(--red)] text-[var(--red)] animate-pulse'
-                    : 'bg-black/40 border-[var(--glass-border)] text-gray-500'
+            {/* Alerts Counter */}
+            <div className={`flex items-center gap-3 px-4 py-2 rounded-full border transition-all duration-300 shadow-lg ${alertCount > 0
+                ? 'bg-red-500/20 border-red-500/50 text-red-400 shadow-[0_0_20px_rgba(239,68,68,0.4)] animate-pulse'
+                : 'bg-black/80 border-white/10 text-gray-500'
                 }`}>
-                <AlertTriangle className="w-3 h-3" />
-                <span className="font-mono text-xs tracking-widest">ALERTS: {alertCount}</span>
+                <AlertTriangle className="w-4 h-4" />
+                <span className="font-mono text-xs font-bold tracking-widest">ALERTS: {alertCount}</span>
             </div>
         </div>
     );

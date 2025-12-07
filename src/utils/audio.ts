@@ -9,9 +9,9 @@ const speakMessage = (text: string) => {
         window.speechSynthesis.cancel();
 
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 1.1; // Slightly faster
-        utterance.pitch = 1.0;
-        utterance.volume = 1.0;
+        utterance.rate = 1.5; // Slightly faster
+        utterance.pitch = 50.0;
+        utterance.volume = 2.0;
         window.speechSynthesis.speak(utterance);
     }
 };

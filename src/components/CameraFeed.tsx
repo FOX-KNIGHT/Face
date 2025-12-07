@@ -63,7 +63,7 @@ export const CameraFeed: React.FC<CameraFeedProps> = ({ webcamRef, canvasRef, dr
                         </div>
                         <div className="flex justify-between gap-4">
                             <span className="text-gray-400">HEAD VELOCITY:</span>
-                            <span className={driverState.headVelocity > 15 ? "text-yellow-400 font-bold" : "text-blue-400"}>
+                            <span className={driverState.headVelocity > 5 ? "text-yellow-400 font-bold" : "text-blue-400"}>
                                 {driverState.headVelocity.toFixed(2)}
                             </span>
                         </div>

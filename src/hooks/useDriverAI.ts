@@ -24,9 +24,9 @@ export interface LogEntry {
 
 // Constants
 const EAR_THRESHOLD = 0.25;
-const CONSECUTIVE_FRAMES = 15;
-const RAGE_VELOCITY_THRESHOLD = 3.0; // Increased from 0.5 to 2.0 for lower sensitivity
-const RAGE_CONSECUTIVE_FRAMES = 5; // Debounce for rage detection
+const CONSECUTIVE_FRAMES = 10;
+const RAGE_VELOCITY_THRESHOLD = 2.0; // Increased from 0.5 to 2.0 for lower sensitivity
+const RAGE_CONSECUTIVE_FRAMES = 2; // Debounce for rage detection
 
 export const useDriverAI = (videoRef: React.RefObject<Webcam | null>, canvasRef: React.RefObject<HTMLCanvasElement | null>) => {
     const [driverState, setDriverState] = useState<DriverState>({
