@@ -48,10 +48,13 @@ export const useDriverAI = (videoRef: React.RefObject<Webcam | null>) => {
 
     const [isInitialized, setIsInitialized] = useState(false);
 
+    const [isMonitoring, setIsMonitoring] = useState(false);
+
     // Refs for logic to avoid re-renders
     const frameCounter = useRef(0);
     const lastProcessTime = useRef(Date.now());
     const lastNosePos = useRef<{ x: number, y: number } | null>(null);
+    const distractionStartTime = useRef<number | null>(null);
 
     // Persist logs whenever they change
     useEffect(() => {
@@ -61,6 +64,19 @@ export const useDriverAI = (videoRef: React.RefObject<Webcam | null>) => {
     const clearLogs = useCallback(() => {
         setLogs([]);
         localStorage.removeItem('driver_logs');
+    }, []);
+
+    const toggleMonitoring = useCallback(() => {
+        setIsMonitoring(prev => !prev);
+        // Reset state on toggle
+        setDriverState(prev => ({
+            ...prev,
+            isDrowsy: false,
+            isRage: false,
+            status: 'NORMAL'
+        }));
+        frameCounter.current = 0;
+        distractionStartTime.current = null;
     }, []);
 
     // EAR Calculation
@@ -111,6 +127,7 @@ export const useDriverAI = (videoRef: React.RefObject<Webcam | null>) => {
     };
 
     const onResults = useCallback((results: Results) => {
+        if (!isMonitoring) return;
         if (!results.multiFaceLandmarks || results.multiFaceLandmarks.length === 0) return;
 
         const now = Date.now();
@@ -201,5 +218,5 @@ export const useDriverAI = (videoRef: React.RefObject<Webcam | null>) => {
         }
     }, [videoRef, onResults]);
 
-    return { driverState, logs, isInitialized, clearLogs };
+    return { driverState, logs, isInitialized, clearLogs, isMonitoring, toggleMonitoring };
 };

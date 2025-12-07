@@ -9,11 +9,11 @@ import { useDriverAI } from './hooks/useDriverAI';
 
 function App() {
   const webcamRef = useRef<Webcam>(null);
-  const { driverState, logs, isInitialized, clearLogs } = useDriverAI(webcamRef);
+  const { driverState, logs, isInitialized, clearLogs, isMonitoring, toggleMonitoring } = useDriverAI(webcamRef);
 
   return (
     <div style={{ minHeight: '100vh', paddingBottom: '3rem' }}>
-      <Header />
+      <Header isMonitoring={isMonitoring} onToggleMonitoring={toggleMonitoring} />
 
       <main className="container" style={{ paddingTop: '6rem' }}>
         <div className="main-grid">
@@ -24,7 +24,7 @@ function App() {
               driverState={driverState}
               isInitialized={isInitialized}
             />
-            <StatusPanel status={driverState.status} />
+            <StatusPanel status={driverState.status} isMonitoring={isMonitoring} />
             <PrivacyPolicy />
           </div>
 

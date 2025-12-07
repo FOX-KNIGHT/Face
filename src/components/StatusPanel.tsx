@@ -3,10 +3,23 @@ import { CheckCircle, EyeOff, Zap, AlertTriangle } from 'lucide-react';
 
 interface StatusPanelProps {
     status: 'NORMAL' | 'DROWSY' | 'RAGE' | 'DISTRACTED';
+    isMonitoring: boolean;
 }
 
-export const StatusPanel: React.FC<StatusPanelProps> = ({ status }) => {
+export const StatusPanel: React.FC<StatusPanelProps> = ({ status, isMonitoring }) => {
     const getStatusConfig = () => {
+        if (!isMonitoring) {
+            return {
+                color: 'text-gray-500',
+                borderColor: 'border-gray-700',
+                shadow: '',
+                icon: CheckCircle,
+                text: 'SYSTEM STANDBY',
+                subtext: 'WAITING FOR INPUT',
+                pulse: ''
+            };
+        }
+
         switch (status) {
             case 'DROWSY':
                 return {
@@ -63,11 +76,11 @@ export const StatusPanel: React.FC<StatusPanelProps> = ({ status }) => {
 
             <div className="relative z-10 flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                    <div className={`w-16 h-16 rounded-full border-2 ${config.borderColor} flex items-center justify-center ${config.shadow} ${config.pulse} bg-black/50`}>
+                    <div className={`w-16 h-16 rounded-full border-2 ${config.borderColor} flex items-center justify-center ${config.shadow} ${config.pulse} bg-black/50 transition-all duration-300`}>
                         <Icon className={`w-8 h-8 ${config.color}`} />
                     </div>
                     <div>
-                        <h2 className={`text-2xl font-bold tracking-widest ${config.color} font-display`}>
+                        <h2 className={`text-2xl font-bold tracking-widest ${config.color} font-display transition-colors duration-300`}>
                             {config.text}
                         </h2>
                         <p className="text-gray-400 font-mono text-xs tracking-wider uppercase">
@@ -79,10 +92,10 @@ export const StatusPanel: React.FC<StatusPanelProps> = ({ status }) => {
                 {/* Decorative Tech Elements */}
                 <div className="flex flex-col gap-1 items-end opacity-50">
                     <div className="w-24 h-1 bg-[var(--glass-border)] rounded-full overflow-hidden">
-                        <div className={`h-full ${status === 'NORMAL' ? 'bg-[var(--cyan)]' : 'bg-[var(--red)]'} w-2/3 animate-pulse`}></div>
+                        <div className={`h-full ${isMonitoring && status === 'NORMAL' ? 'bg-[var(--cyan)]' : isMonitoring ? 'bg-[var(--red)]' : 'bg-gray-700'} w-2/3 transition-all duration-500 ${isMonitoring ? 'animate-pulse' : ''}`}></div>
                     </div>
                     <div className="w-16 h-1 bg-[var(--glass-border)] rounded-full overflow-hidden">
-                        <div className={`h-full ${status === 'NORMAL' ? 'bg-[var(--cyan)]' : 'bg-[var(--red)]'} w-full animate-pulse`} style={{ animationDelay: '0.2s' }}></div>
+                        <div className={`h-full ${isMonitoring && status === 'NORMAL' ? 'bg-[var(--cyan)]' : isMonitoring ? 'bg-[var(--red)]' : 'bg-gray-700'} w-full transition-all duration-500 ${isMonitoring ? 'animate-pulse' : ''}`} style={{ animationDelay: '0.2s' }}></div>
                     </div>
                 </div>
             </div>
