@@ -25,8 +25,8 @@ export interface LogEntry {
 // Constants
 const EAR_THRESHOLD = 0.25;
 const CONSECUTIVE_FRAMES = 15;
-const RAGE_VELOCITY_THRESHOLD = 2.0; // Increased from 0.5 to 2.0 for lower sensitivity
-const RAGE_CONSECUTIVE_FRAMES = 3; // Debounce for rage detection
+const RAGE_VELOCITY_THRESHOLD = 5.0; // Increased from 0.5 to 2.0 for lower sensitivity
+const RAGE_CONSECUTIVE_FRAMES = 7; // Debounce for rage detection
 
 export const useDriverAI = (videoRef: React.RefObject<Webcam | null>, canvasRef: React.RefObject<HTMLCanvasElement | null>) => {
     const [driverState, setDriverState] = useState<DriverState>({
@@ -62,6 +62,7 @@ export const useDriverAI = (videoRef: React.RefObject<Webcam | null>, canvasRef:
     const lastProcessTime = useRef(Date.now());
     const lastNosePos = useRef<{ x: number, y: number } | null>(null);
     const distractionStartTime = useRef<number | null>(null);
+    const lastAudioTime = useRef<number>(0);
 
     // Auto-delete logs older than 3 days on mount
     useEffect(() => {
@@ -207,6 +208,12 @@ export const useDriverAI = (videoRef: React.RefObject<Webcam | null>, canvasRef:
             }));
             frameCounter.current = 0;
             rageFrameCounter.current = 0;
+
+            // Debounce audio for NO_FACE (every 5 seconds)
+            if (Date.now() - lastAudioTime.current > 5000) {
+                playAlertSound('no_face');
+                lastAudioTime.current = Date.now();
+            }
             return;
         }
 

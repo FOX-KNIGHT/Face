@@ -14,7 +14,7 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({ currentMode, onModeC
     ] as const;
 
     return (
-        <div className="flex items-center gap-2 bg-black/40 p-1 rounded-md border border-[var(--glass-border)]">
+        <div className="flex items-center gap-3 bg-black/60 backdrop-blur-md p-2 rounded-xl border border-[var(--glass-border)] shadow-lg">
             {modes.map((mode) => {
                 const Icon = mode.icon;
                 const isActive = currentMode === mode.id;
@@ -23,13 +23,14 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({ currentMode, onModeC
                     <button
                         key={mode.id}
                         onClick={() => onModeChange(mode.id)}
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded-sm transition-all duration-300 ${isActive
-                                ? `bg-[${mode.color}]/10 border border-[${mode.color}] text-[${mode.color}] shadow-[0_0_10px_${mode.color}40]`
-                                : 'text-gray-500 hover:text-gray-300 hover:bg-white/5 border border-transparent'
+                        className={`group flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-300 relative overflow-hidden ${isActive
+                            ? `bg-[${mode.color}]/10 border border-[${mode.color}] text-[${mode.color}] shadow-[0_0_15px_${mode.color}40]`
+                            : 'text-gray-400 hover:text-gray-200 hover:bg-white/5 border border-transparent'
                             }`}
                     >
-                        <Icon className="w-3 h-3" />
-                        <span className="text-[10px] font-bold tracking-wider">{mode.label}</span>
+                        <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300 bg-[${mode.color}]`} />
+                        <Icon className={`w-4 h-4 ${isActive ? 'animate-pulse' : ''}`} />
+                        <span className="text-xs font-bold tracking-widest">{mode.label}</span>
                     </button>
                 );
             })}
