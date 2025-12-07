@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, Activity, Cpu } from 'lucide-react';
+import { Activity, Cpu } from 'lucide-react';
 
 export const Header: React.FC = () => {
     return (
