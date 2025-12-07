@@ -8,28 +8,36 @@ interface AlertsListProps {
 
 export const AlertsList: React.FC<AlertsListProps> = ({ alerts }) => {
     return (
-        <div className="glass-panel" style={{ padding: '1.5rem', height: '100%' }}>
-            <div className="flex items-center gap-2 mb-6" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>
-                <Bell className="w-5 h-5" style={{ color: '#60a5fa' }} />
-                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'white' }}>Recent Alerts</h3>
+        <div className="card h-full flex flex-col">
+            <div className="card-header">
+                <div className="flex items-center gap-3">
+                    <Bell className="w-5 h-5 text-accent" />
+                    <h3 className="text-lg font-semibold text-primary">Recent Alerts</h3>
+                </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                 {alerts.length === 0 ? (
-                    <div className="text-center" style={{ color: '#6b7280', padding: '2rem 0', fontSize: '0.875rem' }}>
+                    <div className="text-center py-12 text-secondary text-sm border border-dashed border-white/5 rounded-lg">
                         No recent alerts detected
                     </div>
                 ) : (
                     alerts.map((alert) => (
                         <div
                             key={alert.id}
-                            className={`alert-item ${alert.type === 'drowsiness' ? 'alert-drowsiness' : 'alert-distraction'
+                            className={`flex items-start gap-4 p-4 rounded-lg border transition-all duration-300 ${alert.type === 'drowsiness'
+                                    ? 'bg-alert/5 border-alert/20'
+                                    : 'bg-accent/5 border-accent/20'
                                 }`}
                         >
-                            <AlertCircle className="w-5 h-5" style={{ flexShrink: 0 }} />
+                            <AlertCircle className={`w-5 h-5 mt-0.5 ${alert.type === 'drowsiness' ? 'text-alert' : 'text-accent'
+                                }`} />
                             <div>
-                                <p style={{ fontWeight: 500, fontSize: '0.875rem' }}>{alert.message}</p>
-                                <p style={{ fontSize: '0.75rem', opacity: 0.6, marginTop: '0.25rem' }}>
+                                <p className={`text-sm font-medium ${alert.type === 'drowsiness' ? 'text-alert' : 'text-accent'
+                                    }`}>
+                                    {alert.message}
+                                </p>
+                                <p className="text-xs text-secondary mt-1 font-mono">
                                     {alert.timestamp.toLocaleTimeString()}
                                 </p>
                             </div>

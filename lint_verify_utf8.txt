@@ -1,0 +1,62 @@
+﻿
+> perihelion-bohr@0.0.0 lint
+> eslint .
+
+
+C:\Users\ayush\.gemini\antigravity\playground\perihelion-bohr\src\components\SessionInfo.tsx
+  15:17  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\ayush\.gemini\antigravity\playground\perihelion-bohr\src\components\SessionInfo.tsx:15:17
+  13 |         if (!startTime) {
+  14 |             if (elapsed !== '00:00:00') {
+> 15 |                 setElapsed('00:00:00');
+     |                 ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  16 |             }
+  17 |             return;
+  18 |         }  react-hooks/set-state-in-effect
+  34:8   warning  React Hook useEffect has a missing dependency: 'elapsed'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    react-hooks/exhaustive-deps
+
+C:\Users\ayush\.gemini\antigravity\playground\perihelion-bohr\src\hooks\useDriverAI.ts
+   70:9   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\ayush\.gemini\antigravity\playground\perihelion-bohr\src\hooks\useDriverAI.ts:70:9
+  68 |     useEffect(() => {
+  69 |         const threeDaysAgo = Date.now() - (3 * 24 * 60 * 60 * 1000);
+> 70 |         setLogs(prev => prev.filter(log => new Date(log.timestamp).getTime() > threeDaysAgo));
+     |         ^^^^^^^ Avoid calling setState() directly within an effect
+  71 |     }, []);
+  72 |
+  73 |     // Persist logs whenever they change  react-hooks/set-state-in-effect
+  123:5   warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')
+  321:13  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\ayush\.gemini\antigravity\playground\perihelion-bohr\src\hooks\useDriverAI.ts:321:13
+  319 |             });
+  320 |             camera.start();
+> 321 |             setIsInitialized(true);
+      |             ^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  322 |         }
+  323 |     }, [videoRef, onResults]);
+  324 |                                                                                                  react-hooks/set-state-in-effect
+
+Γ£û 5 problems (3 errors, 2 warnings)
+  0 errors and 1 warning potentially fixable with the `--fix` option.
+

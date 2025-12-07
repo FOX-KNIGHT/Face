@@ -10,66 +10,54 @@ export const StatusPanel: React.FC<StatusPanelProps> = ({ status, isMonitoring }
     const getStatusConfig = () => {
         if (!isMonitoring) {
             return {
-                color: 'text-gray-500',
-                borderColor: 'border-gray-700',
-                shadow: '',
+                color: 'text-secondary',
+                bg: 'bg-surface',
                 icon: CheckCircle,
-                text: 'SYSTEM STANDBY',
-                subtext: 'WAITING FOR INPUT',
-                pulse: ''
+                text: 'Standby',
+                subtext: 'System Ready',
             };
         }
 
         switch (status) {
             case 'DROWSY':
                 return {
-                    color: 'text-[var(--red)]',
-                    borderColor: 'border-[var(--red)]',
-                    shadow: 'shadow-[0_0_30px_var(--red-dim)]',
+                    color: 'text-alert',
+                    bg: 'bg-alert/10',
                     icon: EyeOff,
-                    text: 'CRITICAL ALERT',
-                    subtext: 'DROWSINESS DETECTED',
-                    pulse: 'animate-pulse'
+                    text: 'Drowsiness Detected',
+                    subtext: 'Please take a break',
                 };
             case 'RAGE':
                 return {
-                    color: 'text-[var(--yellow)]',
-                    borderColor: 'border-[var(--yellow)]',
-                    shadow: 'shadow-[0_0_30px_var(--yellow-dim)]',
+                    color: 'text-accent',
+                    bg: 'bg-accent/10',
                     icon: Zap,
-                    text: 'BEHAVIOR WARNING',
-                    subtext: 'AGGRESSIVE MANEUVERS',
-                    pulse: 'animate-pulse'
+                    text: 'High Stress',
+                    subtext: 'Calm down',
                 };
             case 'DISTRACTED':
                 return {
-                    color: 'text-[var(--yellow)]',
-                    borderColor: 'border-[var(--yellow)]',
-                    shadow: 'shadow-[0_0_30px_var(--yellow-dim)]',
+                    color: 'text-accent',
+                    bg: 'bg-accent/10',
                     icon: AlertTriangle,
-                    text: 'ATTENTION ALERT',
-                    subtext: 'EYES OFF ROAD',
-                    pulse: 'animate-pulse'
+                    text: 'Distracted',
+                    subtext: 'Keep eyes on road',
                 };
             case 'NO_FACE':
                 return {
-                    color: 'text-[var(--yellow)]',
-                    borderColor: 'border-[var(--yellow)]',
-                    shadow: 'shadow-[0_0_30px_var(--yellow-dim)]',
+                    color: 'text-accent',
+                    bg: 'bg-accent/10',
                     icon: AlertTriangle,
-                    text: 'DRIVER NOT DETECTED',
-                    subtext: 'FACE NOT VISIBLE',
-                    pulse: 'animate-pulse'
+                    text: 'No Driver',
+                    subtext: 'Face not detected',
                 };
             default:
                 return {
-                    color: 'text-[var(--cyan)]',
-                    borderColor: 'border-[var(--cyan)]',
-                    shadow: 'shadow-[0_0_30px_var(--cyan-dim)]',
+                    color: 'text-success',
+                    bg: 'bg-success/10',
                     icon: CheckCircle,
-                    text: 'SYSTEM NOMINAL',
-                    subtext: 'DRIVER ATTENTIVE',
-                    pulse: ''
+                    text: 'Attentive',
+                    subtext: 'System Active',
                 };
         }
     };
@@ -78,36 +66,27 @@ export const StatusPanel: React.FC<StatusPanelProps> = ({ status, isMonitoring }
     const Icon = config.icon;
 
     return (
-        <div className="glass-panel p-6 relative overflow-hidden">
-            {/* Background Grid Effect */}
-            <div className="absolute inset-0 opacity-10"
-                style={{ backgroundImage: 'linear-gradient(0deg, transparent 24%, rgba(255, 255, 255, .3) 25%, rgba(255, 255, 255, .3) 26%, transparent 27%, transparent 74%, rgba(255, 255, 255, .3) 75%, rgba(255, 255, 255, .3) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(255, 255, 255, .3) 25%, rgba(255, 255, 255, .3) 26%, transparent 27%, transparent 74%, rgba(255, 255, 255, .3) 75%, rgba(255, 255, 255, .3) 76%, transparent 77%, transparent)', backgroundSize: '30px 30px' }}>
+        <div className="card p-8 flex items-center justify-between">
+            <div className="flex items-center gap-6">
+                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-colors duration-300 ${config.bg}`}>
+                    <Icon className={`w-8 h-8 ${config.color}`} />
+                </div>
+                <div>
+                    <h2 className="text-2xl font-semibold text-primary tracking-tight">
+                        {config.text}
+                    </h2>
+                    <p className="text-secondary text-sm font-medium mt-1">
+                        {config.subtext}
+                    </p>
+                </div>
             </div>
 
-            <div className="relative z-10 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <div className={`w-16 h-16 rounded-full border-2 ${config.borderColor} flex items-center justify-center ${config.shadow} ${config.pulse} bg-black/50 transition-all duration-300`}>
-                        <Icon className={`w-8 h-8 ${config.color}`} />
-                    </div>
-                    <div>
-                        <h2 className={`text-2xl font-bold tracking-widest ${config.color} font-display transition-colors duration-300`}>
-                            {config.text}
-                        </h2>
-                        <p className="text-gray-400 font-mono text-xs tracking-wider uppercase">
-                            {config.subtext}
-                        </p>
-                    </div>
-                </div>
-
-                {/* Decorative Tech Elements */}
-                <div className="flex flex-col gap-1 items-end opacity-50">
-                    <div className="w-24 h-1 bg-[var(--glass-border)] rounded-full overflow-hidden">
-                        <div className={`h-full ${isMonitoring && status === 'NORMAL' ? 'bg-[var(--cyan)]' : isMonitoring ? 'bg-[var(--red)]' : 'bg-gray-700'} w-2/3 transition-all duration-500 ${isMonitoring ? 'animate-pulse' : ''}`}></div>
-                    </div>
-                    <div className="w-16 h-1 bg-[var(--glass-border)] rounded-full overflow-hidden">
-                        <div className={`h-full ${isMonitoring && status === 'NORMAL' ? 'bg-[var(--cyan)]' : isMonitoring ? 'bg-[var(--red)]' : 'bg-gray-700'} w-full transition-all duration-500 ${isMonitoring ? 'animate-pulse' : ''}`} style={{ animationDelay: '0.2s' }}></div>
-                    </div>
-                </div>
+            {/* Status Indicator Dot */}
+            <div className="flex flex-col items-end gap-2">
+                <div className={`w-3 h-3 rounded-full ${isMonitoring ? (status === 'NORMAL' ? 'bg-success' : 'bg-alert animate-pulse') : 'bg-secondary'}`}></div>
+                <span className="text-xs text-secondary font-medium uppercase tracking-wider">
+                    {isMonitoring ? 'Live' : 'Offline'}
+                </span>
             </div>
         </div>
     );

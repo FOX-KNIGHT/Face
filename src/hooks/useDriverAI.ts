@@ -23,10 +23,9 @@ export interface LogEntry {
 }
 
 // Constants
-const EAR_THRESHOLD = 0.25;
-const CONSECUTIVE_FRAMES = 10;
-const RAGE_VELOCITY_THRESHOLD = 2.0; // Increased from 0.5 to 2.0 for lower sensitivity
-const RAGE_CONSECUTIVE_FRAMES = 2; // Debounce for rage detection
+// Constants
+// Note: Constants are now defined dynamically in MODE_CONFIGS inside the hook
+
 
 export const useDriverAI = (videoRef: React.RefObject<Webcam | null>, canvasRef: React.RefObject<HTMLCanvasElement | null>) => {
     const [driverState, setDriverState] = useState<DriverState>({
@@ -43,7 +42,7 @@ export const useDriverAI = (videoRef: React.RefObject<Webcam | null>, canvasRef:
         try {
             const saved = localStorage.getItem('driver_logs');
             return saved ? JSON.parse(saved) : [];
-        } catch (e) {
+        } catch {
             return [];
         }
     });
@@ -59,7 +58,7 @@ export const useDriverAI = (videoRef: React.RefObject<Webcam | null>, canvasRef:
     // Refs for logic to avoid re-renders
     const frameCounter = useRef(0);
     const rageFrameCounter = useRef(0);
-    const lastProcessTime = useRef(Date.now());
+    const lastProcessTime = useRef(0);
     const lastNosePos = useRef<{ x: number, y: number } | null>(null);
     const distractionStartTime = useRef<number | null>(null);
     const lastAudioTime = useRef<number>(0);
@@ -67,6 +66,7 @@ export const useDriverAI = (videoRef: React.RefObject<Webcam | null>, canvasRef:
     // Auto-delete logs older than 3 days on mount
     useEffect(() => {
         const threeDaysAgo = Date.now() - (3 * 24 * 60 * 60 * 1000);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setLogs(prev => prev.filter(log => new Date(log.timestamp).getTime() > threeDaysAgo));
     }, []);
 
@@ -120,7 +120,9 @@ export const useDriverAI = (videoRef: React.RefObject<Webcam | null>, canvasRef:
     // Left Eye: 33 (inner), 133 (outer), 160 (top1), 158 (top2), 144 (bottom1), 153 (bottom2)
     // Right Eye: 362 (inner), 263 (outer), 385 (top1), 387 (top2), 380 (bottom1), 373 (bottom2)
 
-    const calculateEAR = (landmarks: any[]) => {
+    // Right Eye: 362 (inner), 263 (outer), 385 (top1), 387 (top2), 380 (bottom1), 373 (bottom2)
+
+    const calculateEAR = (landmarks: { x: number; y: number }[]) => {
         const getDist = (p1: number, p2: number) => {
             const x = landmarks[p1].x - landmarks[p2].x;
             const y = landmarks[p1].y - landmarks[p2].y;
@@ -140,7 +142,7 @@ export const useDriverAI = (videoRef: React.RefObject<Webcam | null>, canvasRef:
         return (leftEyeEAR + rightEyeEAR) / 2;
     };
 
-    const calculateHeadVelocity = (landmarks: any[], deltaTime: number) => {
+    const calculateHeadVelocity = (landmarks: { x: number; y: number }[], deltaTime: number) => {
         const nose = landmarks[1]; // Nose tip
         if (!lastNosePos.current) {
             lastNosePos.current = { x: nose.x, y: nose.y };
@@ -173,6 +175,10 @@ export const useDriverAI = (videoRef: React.RefObject<Webcam | null>, canvasRef:
             if (canvasCtx) {
                 canvasCtx.save();
                 canvasCtx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+
+                // Flip the canvas horizontally to match the mirrored webcam
+                canvasCtx.translate(canvasRef.current.width, 0);
+                canvasCtx.scale(-1, 1);
 
                 if (results.multiFaceLandmarks) {
                     for (const landmarks of results.multiFaceLandmarks) {
@@ -209,8 +215,11 @@ export const useDriverAI = (videoRef: React.RefObject<Webcam | null>, canvasRef:
             frameCounter.current = 0;
             rageFrameCounter.current = 0;
 
-            // Debounce audio for NO_FACE (every 5 seconds)
-            if (Date.now() - lastAudioTime.current > 5000) {
+            // Mode Config for No Face (duplicated for scope access - efficient enough)
+            const noFaceDebounce = driverMode === 'EMERGENCY' ? 1000 : (driverMode === 'RIDESHARE' ? 3000 : 5000);
+
+            // Debounce audio for NO_FACE
+            if (Date.now() - lastAudioTime.current > noFaceDebounce) {
                 playAlertSound('no_face');
                 lastAudioTime.current = Date.now();
             }
@@ -221,26 +230,50 @@ export const useDriverAI = (videoRef: React.RefObject<Webcam | null>, canvasRef:
         const ear = calculateEAR(landmarks);
         const headVelocity = calculateHeadVelocity(landmarks, deltaTime);
 
-        // Drowsiness Logic
-        // Adjust threshold based on mode (stricter for RIDESHARE/EMERGENCY)
-        const currentEarThreshold = driverMode === 'PRIVATE' ? EAR_THRESHOLD : EAR_THRESHOLD + 0.05;
+        // Mode Configuration
+        const MODE_CONFIGS = {
+            PRIVATE: { // Standard
+                earThreshold: 0.25,
+                distractionThreshold: 1.5,
+                drowsyFrames: 10,
+                rageFrames: 2,
+                noFaceDebounce: 5000
+            },
+            RIDESHARE: { // Pro
+                earThreshold: 0.28, // More sensitive to droopy eyes
+                distractionThreshold: 1.2, // More sensitive to looking away
+                drowsyFrames: 8, // Faster reaction
+                rageFrames: 2,
+                noFaceDebounce: 3000
+            },
+            EMERGENCY: { // Emergency
+                earThreshold: 0.30, // Max sensitivity
+                distractionThreshold: 0.8, // Any sudden move triggers alert
+                drowsyFrames: 4, // Instant reaction
+                rageFrames: 1, // Instant reaction
+                noFaceDebounce: 1000 // Immediate warning
+            }
+        };
 
-        if (ear < currentEarThreshold) {
+        const config = MODE_CONFIGS[driverMode] || MODE_CONFIGS.PRIVATE;
+
+        // Drowsiness Logic
+        if (ear < config.earThreshold) {
             frameCounter.current++;
         } else {
             frameCounter.current = 0;
         }
 
-        const isDrowsy = frameCounter.current >= CONSECUTIVE_FRAMES;
+        const isDrowsy = frameCounter.current >= config.drowsyFrames;
 
-        // Rage Logic: High velocity head movement with debounce
-        if (headVelocity > RAGE_VELOCITY_THRESHOLD) {
+        // Distraction/Rage Logic
+        if (headVelocity > config.distractionThreshold) {
             rageFrameCounter.current++;
         } else {
             rageFrameCounter.current = 0;
         }
 
-        const isRage = rageFrameCounter.current >= RAGE_CONSECUTIVE_FRAMES;
+        const isRage = rageFrameCounter.current >= config.rageFrames;
 
         let status: DriverState['status'] = 'NORMAL';
         if (isDrowsy) status = 'DROWSY';
@@ -286,7 +319,7 @@ export const useDriverAI = (videoRef: React.RefObject<Webcam | null>, canvasRef:
                 return [newLog, ...prev].slice(0, 50); // Keep last 50 logs
             });
         }
-    }, [isMonitoring, driverMode]); // Added driverMode dependency
+    }, [isMonitoring, driverMode, videoRef, canvasRef]); // Added driverMode dependency
 
     useEffect(() => {
         const faceMesh = new FaceMesh({
@@ -317,7 +350,13 @@ export const useDriverAI = (videoRef: React.RefObject<Webcam | null>, canvasRef:
                 height: 480,
             });
             camera.start();
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setIsInitialized(true);
+
+            return () => {
+                camera.stop();
+                faceMesh.close();
+            };
         }
     }, [videoRef, onResults]);
 

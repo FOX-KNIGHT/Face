@@ -1,5 +1,5 @@
 import React from 'react';
-import { Car, ShieldAlert, User } from 'lucide-react';
+import { Shield, Zap, User } from 'lucide-react';
 
 interface ModeSelectorProps {
     currentMode: 'RIDESHARE' | 'EMERGENCY' | 'PRIVATE';
@@ -8,44 +8,40 @@ interface ModeSelectorProps {
 
 export const ModeSelector: React.FC<ModeSelectorProps> = ({ currentMode, onModeChange }) => {
     const modes = [
-        { id: 'PRIVATE', label: 'PRIVATE', icon: User, colorClass: 'cyan' },
-        { id: 'RIDESHARE', label: 'RIDESHARE', icon: Car, colorClass: 'yellow' },
-        { id: 'EMERGENCY', label: 'EMERGENCY', icon: ShieldAlert, colorClass: 'red' },
+        { id: 'PRIVATE', label: 'Standard', sub: 'Balanced', icon: User },
+        { id: 'RIDESHARE', label: 'Pro', sub: 'High Sensitivity', icon: Shield },
+        { id: 'EMERGENCY', label: 'Emergency', sub: 'Max Alert', icon: Zap },
     ] as const;
 
     return (
-        <div className="flex items-center gap-1 bg-black/80 backdrop-blur-xl p-1.5 rounded-full border border-white/10 shadow-2xl">
+        <div className="flex items-center bg-surface-highlight/50 p-1 rounded-xl border border-white/5">
             {modes.map((mode) => {
                 const Icon = mode.icon;
                 const isActive = currentMode === mode.id;
-
-                let activeClasses = '';
-                let iconColor = '';
-
-                if (isActive) {
-                    if (mode.id === 'PRIVATE') {
-                        activeClasses = 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.3)]';
-                        iconColor = 'text-cyan-400';
-                    } else if (mode.id === 'RIDESHARE') {
-                        activeClasses = 'bg-yellow-500/20 border-yellow-500/50 text-yellow-400 shadow-[0_0_20px_rgba(234,179,8,0.3)]';
-                        iconColor = 'text-yellow-400';
-                    } else {
-                        activeClasses = 'bg-red-500/20 border-red-500/50 text-red-400 shadow-[0_0_20px_rgba(239,68,68,0.3)]';
-                        iconColor = 'text-red-400';
-                    }
-                } else {
-                    activeClasses = 'border-transparent text-gray-500 hover:text-gray-300 hover:bg-white/5';
-                    iconColor = 'text-gray-500 group-hover:text-gray-300';
-                }
 
                 return (
                     <button
                         key={mode.id}
                         onClick={() => onModeChange(mode.id)}
-                        className={`group flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300 ${activeClasses}`}
+                        className={`
+                            relative flex items-center gap-3 px-6 py-3 rounded-lg transition-all duration-300
+                            ${isActive ? 'bg-surface shadow-soft text-primary' : 'text-secondary hover:text-primary hover:bg-white/5'}
+                        `}
                     >
-                        <Icon className={`w-4 h-4 transition-colors duration-300 ${iconColor} ${isActive ? 'animate-pulse' : ''}`} />
-                        <span className="text-[10px] font-bold tracking-[0.2em]">{mode.label}</span>
+                        <Icon className={`w-4 h-4 ${isActive ? 'text-accent' : 'text-secondary'}`} />
+                        <div className="flex flex-col items-start">
+                            <span className="text-sm font-medium leading-none">{mode.label}</span>
+                            {isActive && (
+                                <span className="text-[10px] text-secondary mt-1 font-medium tracking-wide">
+                                    {mode.sub}
+                                </span>
+                            )}
+                        </div>
+
+                        {/* Active Indicator Line */}
+                        {isActive && (
+                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/3 h-0.5 bg-accent rounded-full mb-1.5"></div>
+                        )}
                     </button>
                 );
             })}

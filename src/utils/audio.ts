@@ -1,17 +1,28 @@
 // Utility to generate synthesized alert sounds using Web Audio API
-// This avoids external file dependencies and ensures low latency
+// Designed to be "irritating" and high-pitched for maximum alertness
 
 let audioContext: AudioContext | null = null;
+let masterGain: GainNode | null = null;
+
+const initAudio = () => {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+        masterGain = audioContext.createGain();
+        masterGain.connect(audioContext.destination);
+        masterGain.gain.value = 0.8; // High volume
+    } else if (audioContext.state === 'suspended') {
+        audioContext.resume();
+    }
+    return audioContext;
+};
 
 const speakMessage = (text: string) => {
     if ('speechSynthesis' in window) {
-        // Cancel any currently playing speech to avoid queue buildup
         window.speechSynthesis.cancel();
-
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 1.5; // Slightly faster
-        utterance.pitch = 50.0;
-        utterance.volume = 2.0;
+        utterance.rate = 1.2; // Urgent speed
+        utterance.pitch = 1.2; // Higher pitch voice
+        utterance.volume = 1.0;
         window.speechSynthesis.speak(utterance);
     }
 };
@@ -21,60 +32,101 @@ export const stopAudio = () => {
         window.speechSynthesis.cancel();
     }
     if (audioContext && audioContext.state === 'running') {
-        audioContext.suspend();
+        if (masterGain) {
+            // Fast cut-off
+            masterGain.gain.cancelScheduledValues(audioContext.currentTime);
+            masterGain.gain.setValueAtTime(masterGain.gain.value, audioContext.currentTime);
+            masterGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
+            setTimeout(() => {
+                audioContext?.suspend();
+                if (masterGain) masterGain.gain.value = 0.8;
+            }, 50);
+        } else {
+            audioContext.suspend();
+        }
     }
 };
 
-const playHighPitchBeep = (ctx: AudioContext) => {
-    const oscillator = ctx.createOscillator();
-    const gainNode = ctx.createGain();
+const playOscillator = (ctx: AudioContext, type: OscillatorType, freq: number, startTime: number, duration: number, vol = 0.1) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
 
-    oscillator.connect(gainNode);
-    gainNode.connect(ctx.destination);
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, startTime);
 
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(1200, ctx.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.2);
+    gain.gain.setValueAtTime(0.001, startTime);
+    gain.gain.exponentialRampToValueAtTime(vol, startTime + 0.01); // Instant attack
+    gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
 
-    gainNode.gain.setValueAtTime(0.2, ctx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+    osc.connect(gain);
+    gain.connect(masterGain!);
 
-    oscillator.start();
-    oscillator.stop(ctx.currentTime + 0.2);
+    osc.start(startTime);
+    osc.stop(startTime + duration);
+};
+
+// "Irritating" Sound Effects
+const soundEffects = {
+    // Drowsiness: High-pitched Square Wave Strobe
+    drowsiness: (ctx: AudioContext) => {
+        const now = ctx.currentTime;
+        // 3000Hz Square wave pulses (Very harsh)
+        for (let i = 0; i < 5; i++) {
+            playOscillator(ctx, 'square', 3000, now + (i * 0.1), 0.05, 0.4);
+        }
+        // Underlying dissonance
+        playOscillator(ctx, 'sawtooth', 2500, now, 0.5, 0.2);
+    },
+
+    // Rage/Distraction: Chaotic Sawtooth Sweep
+    rage: (ctx: AudioContext) => {
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sawtooth';
+
+        // Sweep from 2000Hz to 5000Hz very quickly
+        osc.frequency.setValueAtTime(2000, now);
+        osc.frequency.linearRampToValueAtTime(5000, now + 0.1);
+        osc.frequency.linearRampToValueAtTime(2000, now + 0.2);
+        osc.frequency.linearRampToValueAtTime(5000, now + 0.3);
+
+        gain.gain.setValueAtTime(0.5, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+
+        osc.connect(gain);
+        gain.connect(masterGain!);
+        osc.start(now);
+        osc.stop(now + 0.3);
+
+        // High static noise feel
+        playOscillator(ctx, 'square', 4000, now, 0.3, 0.2);
+    },
+
+    // No Face: Constant High Tone
+    no_face: (ctx: AudioContext) => {
+        const now = ctx.currentTime;
+        // Continuous high beep
+        playOscillator(ctx, 'sine', 3500, now, 0.1, 0.3);
+        playOscillator(ctx, 'square', 3000, now + 0.1, 0.1, 0.2);
+    }
 };
 
 export const playAlertSound = (type: 'drowsiness' | 'rage' | 'no_face') => {
-    if (!audioContext) {
-        audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const ctx = initAudio();
+    if (!ctx) return;
+
+    // Play SFX
+    if (soundEffects[type]) {
+        soundEffects[type](ctx);
     }
 
-    if (audioContext.state === 'suspended') {
-        audioContext.resume();
-    }
-
-    // Play TTS & Alarm
+    // Voice Overlay
     if (type === 'drowsiness') {
-        playHighPitchBeep(audioContext);
-        speakMessage("Wake up");
+        speakMessage("WAKE UP! WAKE UP!");
     } else if (type === 'no_face') {
-        playHighPitchBeep(audioContext);
-        speakMessage("Driver not found");
+        speakMessage("DRIVER NOT FOUND!");
     } else {
-        // Keep the sharp beep for rage as it's an immediate hazard warning
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-
-        oscillator.type = 'square';
-        oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
-        oscillator.frequency.exponentialRampToValueAtTime(1760, audioContext.currentTime + 0.1);
-
-        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-
-        oscillator.start();
-        oscillator.stop(audioContext.currentTime + 0.3);
+        speakMessage("DISTRACTED! EYES ON ROAD!"); // Rage -> Distraction
     }
 };

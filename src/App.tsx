@@ -26,21 +26,20 @@ function App() {
   } = useDriverAI(webcamRef, canvasRef);
 
   return (
-    <div style={{ minHeight: '100vh', paddingBottom: '3rem' }}>
+    <div className="min-h-screen pb-12 bg-background text-primary selection:bg-accent/30">
       <Header isMonitoring={isMonitoring} onToggleMonitoring={toggleMonitoring} />
 
-      <main className="container" style={{ paddingTop: '6rem' }}>
-        {/* Control Bar */}
+      <main className="container pt-24">
         {/* Control Bar */}
         <div className="flex flex-wrap items-center justify-between gap-6 mb-8">
           <ModeSelector currentMode={driverMode} onModeChange={setDriverMode} />
-          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent mx-4" />
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/5 to-transparent mx-4" />
           <SessionInfo startTime={sessionStartTime} alertCount={alertCount} />
         </div>
 
-        <div className="main-grid">
+        <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6 min-h-[calc(100vh-12rem)] lg:h-[calc(100vh-12rem)] h-auto">
           {/* Left Column: Camera & Status */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div className="flex flex-col gap-6">
             <CameraFeed
               webcamRef={webcamRef}
               canvasRef={canvasRef}
@@ -52,7 +51,7 @@ function App() {
           </div>
 
           {/* Right Column: Logs */}
-          <div style={{ height: 'calc(100vh - 8rem)' }}>
+          <div className="h-full overflow-hidden">
             <LogTable logs={logs} onClearLogs={clearLogs} />
           </div>
         </div>

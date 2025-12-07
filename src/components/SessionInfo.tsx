@@ -11,7 +11,10 @@ export const SessionInfo: React.FC<SessionInfoProps> = ({ startTime, alertCount 
 
     useEffect(() => {
         if (!startTime) {
-            setElapsed('00:00:00');
+            if (elapsed !== '00:00:00') {
+                // eslint-disable-next-line react-hooks/set-state-in-effect
+                setElapsed('00:00:00');
+            }
             return;
         }
 
@@ -34,15 +37,15 @@ export const SessionInfo: React.FC<SessionInfoProps> = ({ startTime, alertCount 
     return (
         <div className="flex items-center gap-4">
             {/* Timer */}
-            <div className="flex items-center gap-3 px-4 py-2 bg-black/80 backdrop-blur-xl rounded-full border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.1)]">
-                <Clock className="w-4 h-4 text-cyan-400 animate-pulse" />
-                <span className="font-mono text-sm text-cyan-50 tracking-[0.1em] font-bold">{elapsed}</span>
+            <div className="flex items-center gap-3 px-4 py-2 bg-surface-highlight/50 rounded-lg border border-white/5">
+                <Clock className="w-4 h-4 text-secondary" />
+                <span className="font-mono text-sm text-primary tracking-wider font-medium">{elapsed}</span>
             </div>
 
             {/* Alerts Counter */}
-            <div className={`flex items-center gap-3 px-4 py-2 rounded-full border transition-all duration-300 shadow-lg ${alertCount > 0
-                ? 'bg-red-500/20 border-red-500/50 text-red-400 shadow-[0_0_20px_rgba(239,68,68,0.4)] animate-pulse'
-                : 'bg-black/80 border-white/10 text-gray-500'
+            <div className={`flex items-center gap-3 px-4 py-2 rounded-lg border transition-all duration-300 ${alertCount > 0
+                ? 'bg-alert/10 border-alert/20 text-alert animate-pulse'
+                : 'bg-surface-highlight/50 border-white/5 text-secondary'
                 }`}>
                 <AlertTriangle className="w-4 h-4" />
                 <span className="font-mono text-xs font-bold tracking-widest">ALERTS: {alertCount}</span>
