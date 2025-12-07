@@ -12,7 +12,7 @@ export interface DriverState {
     ear: number;
     fps: number;
     headVelocity: number;
-    status: 'NORMAL' | 'DROWSY' | 'RAGE';
+    status: 'NORMAL' | 'DROWSY' | 'RAGE' | 'NO_FACE';
 }
 
 export interface LogEntry {

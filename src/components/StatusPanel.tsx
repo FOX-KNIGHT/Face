@@ -2,7 +2,7 @@ import React from 'react';
 import { CheckCircle, EyeOff, Zap, AlertTriangle } from 'lucide-react';
 
 interface StatusPanelProps {
-    status: 'NORMAL' | 'DROWSY' | 'RAGE' | 'DISTRACTED';
+    status: 'NORMAL' | 'DROWSY' | 'RAGE' | 'DISTRACTED' | 'NO_FACE';
     isMonitoring: boolean;
 }
 
@@ -49,6 +49,16 @@ export const StatusPanel: React.FC<StatusPanelProps> = ({ status, isMonitoring }
                     icon: AlertTriangle,
                     text: 'ATTENTION ALERT',
                     subtext: 'EYES OFF ROAD',
+                    pulse: 'animate-pulse'
+                };
+            case 'NO_FACE':
+                return {
+                    color: 'text-[var(--yellow)]',
+                    borderColor: 'border-[var(--yellow)]',
+                    shadow: 'shadow-[0_0_30px_var(--yellow-dim)]',
+                    icon: AlertTriangle,
+                    text: 'DRIVER NOT DETECTED',
+                    subtext: 'FACE NOT VISIBLE',
                     pulse: 'animate-pulse'
                 };
             default:

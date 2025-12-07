@@ -71,7 +71,7 @@ export const CameraFeed: React.FC<CameraFeedProps> = ({ webcamRef, driverState, 
                 </div>
 
                 {/* No Face Detected Warning */}
-                {isInitialized && driverState.ear === 0 && (
+                {isInitialized && driverState.status === 'NO_FACE' && (
                     <div className="bg-red-500/20 backdrop-blur-md px-4 py-2 rounded-lg border border-red-500/50 animate-pulse">
                         <span className="text-red-400 font-bold tracking-wider text-sm">NO FACE DETECTED</span>
                     </div>
