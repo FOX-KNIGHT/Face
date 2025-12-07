@@ -263,6 +263,7 @@ export const useDriverAI = (videoRef: React.RefObject<Webcam | null>) => {
         driverMode,
         setDriverMode,
         sessionStartTime,
-        alertCount
+        alertCount,
+        predictEmotion
     };
 };
