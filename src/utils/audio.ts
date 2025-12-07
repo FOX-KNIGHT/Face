@@ -5,12 +5,42 @@ let audioContext: AudioContext | null = null;
 
 const speakMessage = (text: string) => {
     if ('speechSynthesis' in window) {
+        // Cancel any currently playing speech to avoid queue buildup
+        window.speechSynthesis.cancel();
+
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.rate = 1.1; // Slightly faster
         utterance.pitch = 1.0;
         utterance.volume = 1.0;
         window.speechSynthesis.speak(utterance);
     }
+};
+
+export const stopAudio = () => {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+    }
+    if (audioContext && audioContext.state === 'running') {
+        audioContext.suspend();
+    }
+};
+
+const playHighPitchBeep = (ctx: AudioContext) => {
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(1200, ctx.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.2);
+
+    gainNode.gain.setValueAtTime(0.2, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+
+    oscillator.start();
+    oscillator.stop(ctx.currentTime + 0.2);
 };
 
 export const playAlertSound = (type: 'drowsiness' | 'rage' | 'no_face') => {
@@ -22,10 +52,12 @@ export const playAlertSound = (type: 'drowsiness' | 'rage' | 'no_face') => {
         audioContext.resume();
     }
 
-    // Play TTS
+    // Play TTS & Alarm
     if (type === 'drowsiness') {
+        playHighPitchBeep(audioContext);
         speakMessage("Wake up");
     } else if (type === 'no_face') {
+        playHighPitchBeep(audioContext);
         speakMessage("Driver not found");
     } else {
         // Keep the sharp beep for rage as it's an immediate hazard warning

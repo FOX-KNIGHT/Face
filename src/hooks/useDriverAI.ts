@@ -3,7 +3,7 @@ import { FaceMesh, FACEMESH_TESSELATION, FACEMESH_RIGHT_EYE, FACEMESH_LEFT_EYE, 
 import type { Results } from '@mediapipe/face_mesh';
 import { drawConnectors } from '@mediapipe/drawing_utils';
 import { Camera } from '@mediapipe/camera_utils';
-import { playAlertSound } from '../utils/audio';
+import { playAlertSound, stopAudio } from '../utils/audio';
 import Webcam from 'react-webcam';
 
 // Types
@@ -25,8 +25,8 @@ export interface LogEntry {
 // Constants
 const EAR_THRESHOLD = 0.25;
 const CONSECUTIVE_FRAMES = 15;
-const RAGE_VELOCITY_THRESHOLD = 5.0; // Increased from 0.5 to 2.0 for lower sensitivity
-const RAGE_CONSECUTIVE_FRAMES = 7; // Debounce for rage detection
+const RAGE_VELOCITY_THRESHOLD = 3.0; // Increased from 0.5 to 2.0 for lower sensitivity
+const RAGE_CONSECUTIVE_FRAMES = 5; // Debounce for rage detection
 
 export const useDriverAI = (videoRef: React.RefObject<Webcam | null>, canvasRef: React.RefObject<HTMLCanvasElement | null>) => {
     const [driverState, setDriverState] = useState<DriverState>({
@@ -246,6 +246,10 @@ export const useDriverAI = (videoRef: React.RefObject<Webcam | null>, canvasRef:
         if (isDrowsy) status = 'DROWSY';
         if (isRage) status = 'RAGE';
 
+        if (status === 'NORMAL') {
+            stopAudio();
+        }
+
         setDriverState({
             isDrowsy,
             isRage,
@@ -258,7 +262,13 @@ export const useDriverAI = (videoRef: React.RefObject<Webcam | null>, canvasRef:
         // Trigger Alerts & Logs
         if (isDrowsy || isRage) {
             const type = isDrowsy ? 'DROWSINESS' : 'RAGE';
-            playAlertSound(isDrowsy ? 'drowsiness' : 'rage');
+
+            // Debounce audio: only play if 3 seconds have passed since last audio
+            if (Date.now() - lastAudioTime.current > 3000) {
+                playAlertSound(isDrowsy ? 'drowsiness' : 'rage');
+                lastAudioTime.current = Date.now();
+            }
+
             setAlertCount(prev => prev + 1);
 
             setLogs(prev => {
